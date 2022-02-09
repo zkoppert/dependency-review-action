@@ -1,34 +1,44 @@
 {
   "name": "dependency-review-action",
-  "version": "1.0.0",
-  "description": "Action for Dependency Review",
-  "main": "index.js",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A GitHub Action for Dependency Review",
+  "main": "lib/main.js",
   "scripts": {
-    "lint": "eslint .",
-    "prepare": "ncc build index.js -o dist --source-map --license licenses.txt",
+    "build": "tsc",
+    "format": "prettier --write '**/*.ts'",
+    "format-check": "prettier --check '**/*.ts'",
+    "lint": "eslint src/**/*.ts",
+    "package": "ncc build --source-map --license licenses.txt",
     "test": "jest",
-    "all": "npm run lint && npm run prepare && npm run test"
+    "all": "npm run build && npm run format && npm run lint && npm run package && npm test"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/github/dependency-review-action.git"
   },
   "keywords": [
-    "GitHub",
-    "Actions",
-    "Dependency Review"
+    "actions",
+    "node",
+    "setup"
   ],
   "author": "GitHub",
-  "bugs": {
-    "url": "https://github.com/github/dependency-review-action/issues"
-  },
-  "homepage": "https://github.com/github/dependency-review-action#readme",
+  "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.2.5"
+    "@actions/core": "^1.6.0"
   },
   "devDependencies": {
+    "@types/node": "^16.10.5",
+    "@typescript-eslint/eslint-plugin": "^5.11.0",
+    "@typescript-eslint/parser": "^5.0.0",
     "@vercel/ncc": "^0.33.1",
     "eslint": "^8.8.0",
-    "jest": "^27.2.5"
+    "eslint-plugin-github": "^4.3.2",
+    "eslint-plugin-jest": "^25.3.2",
+    "jest": "^27.2.5",
+    "js-yaml": "^4.1.0",
+    "prettier": "2.5.1",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.4.4"
   }
 }
