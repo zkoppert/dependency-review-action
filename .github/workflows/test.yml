@@ -23,4 +23,4 @@ jobs:
         - name: Dependency Review
           uses: ./
             with:
-            milliseconds: 1000
+              milliseconds: 1000
