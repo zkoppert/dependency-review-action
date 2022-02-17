@@ -42,7 +42,7 @@ function run() {
         var payload = {};
         const context = github.context;
         if (!context.payload.pull_request) {
-            core.setFailed('This action only works on pull requests');
+            core.info('This action only works on pull requests');
             return;
         }
         try {
