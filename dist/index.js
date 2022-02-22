@@ -39,7 +39,6 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        var payload = {};
         const context = github.context;
         if (!context.payload.pull_request) {
             core.info('This action only works on pull requests');

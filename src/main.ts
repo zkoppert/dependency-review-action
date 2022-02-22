@@ -2,14 +2,13 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 
 async function run(): Promise<void> {
-  var payload = {};
   const context = github.context
-  
+
   if (!context.payload.pull_request) {
     core.info('This action only works on pull requests')
     return
   }
-  
+
   try {
     core.info(`Repository\t\t ${context.repo.repo}`)
     core.info(`Repo Owner\t\t ${context.repo.owner}`)
