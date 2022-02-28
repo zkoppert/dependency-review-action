@@ -1,6 +1,62 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 4966:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.compare = void 0;
+function compare(_baseRef, _headRef) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // todo: actually do an API call here!
+        return [
+            {
+                change_type: 'removed',
+                manifest: 'path/to/package-lock.json',
+                ecosystem: 'npm',
+                name: '@actions/core',
+                version: '1.1.0',
+                package_url: 'pkg:/npm/%40actions/core@1.1.0',
+                license: 'MIT',
+                repository_nwo: 'owner/sourcerepo'
+            },
+            {
+                change_type: 'added',
+                manifest: 'path/to/package-lock.json',
+                ecosystem: 'npm',
+                name: '@actions/core',
+                version: '1.2.2',
+                package_url: 'pkg:/npm/%40actions/core@1.2.2',
+                license: 'MIT',
+                repository_nwo: 'owner/sourcerepo',
+                vulnerabilities: [
+                    {
+                        severity: 'critical',
+                        advisory_ghsa_id: 'GHSA-rf4j-j272-fj86',
+                        advisory_summary: 'lorem ipsum hackum',
+                        advisory_description: 'tall dark and felonious; enjoys advanced persistent walks through your infra'
+                    }
+                ]
+            }
+        ];
+    });
+}
+exports.compare = compare;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -36,6 +92,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
+const dependencyGraph = __importStar(__nccwpck_require__(4966));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -52,6 +109,8 @@ function run() {
             core.info(`Head Branch\t\t ${context.payload.pull_request.head.ref}`);
             core.info(`Base SHA\t\t ${context.payload.pull_request.base.sha}`);
             core.info(`Head SHA\t\t ${context.payload.pull_request.head.sha}`);
+            const diff = yield dependencyGraph.compare(context.payload.pull_request.base.ref, context.payload.pull_request.head.ref);
+            core.info(JSON.stringify(diff, null, 2));
         }
         catch (error) {
             if (error instanceof Error)
