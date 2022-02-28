@@ -1,4 +1,4 @@
-export type DependencyGraphCompareResponse = Array<{
+export type DependencyGraphCompareResponse = {
   change_type: 'added' | 'removed'
   manifest: string
   ecosystem: string
@@ -7,17 +7,17 @@ export type DependencyGraphCompareResponse = Array<{
   package_url: string
   license: string
   repository_nwo: string
-  vulnerabilities?: Array<{
+  vulnerabilities?: {
     severity: string
     advisory_ghsa_id: string
     advisory_summary: string
     advisory_description: string
-  }>
-}>
+  }[]
+}[]
 
 export async function compare(
-  baseRef: string,
-  headRef: string
+  _baseRef: string,
+  _headRef: string
 ): Promise<DependencyGraphCompareResponse> {
   // todo: actually do an API call here!
   return [

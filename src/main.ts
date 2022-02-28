@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
+import * as dependencyGraph from './dependency-graph'
 import * as github from '@actions/github'
-import * as dependencyGraph from './dependency_graph'
 
 async function run(): Promise<void> {
   const context = github.context
