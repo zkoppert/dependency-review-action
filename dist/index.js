@@ -2,10 +2,29 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 4966:
-/***/ (function(__unused_webpack_module, exports) {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -16,11 +35,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.compare = void 0;
+exports.compare = exports.CompareResponseSchema = void 0;
+const z = __importStar(__nccwpck_require__(3301));
+exports.CompareResponseSchema = z.array(z.object({
+    change_type: z.enum(['added', 'removed']),
+    manifest: z.string(),
+    ecosystem: z.string(),
+    name: z.string(),
+    version: z.string(),
+    package_url: z.string(),
+    license: z.string(),
+    repository_nwo: z.string(),
+    vulnerabilities: z
+        .array(z.object({
+        severity: z.string(),
+        advisory_ghsa_id: z.string(),
+        advisory_summary: z.string(),
+        advisory_description: z.string()
+    }))
+        .optional()
+}));
 function compare(_baseRef, _headRef) {
     return __awaiter(this, void 0, void 0, function* () {
         // todo: actually do an API call here!
-        return [
+        return exports.CompareResponseSchema.parse([
             {
                 change_type: 'removed',
                 manifest: 'path/to/package-lock.json',
@@ -49,7 +87,7 @@ function compare(_baseRef, _headRef) {
                     }
                 ]
             }
-        ];
+        ]);
     });
 }
 exports.compare = compare;

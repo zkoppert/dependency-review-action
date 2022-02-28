@@ -1,26 +1,36 @@
-export type DependencyGraphCompareResponse = {
-  change_type: 'added' | 'removed'
-  manifest: string
-  ecosystem: string
-  name: string
-  version: string
-  package_url: string
-  license: string
-  repository_nwo: string
-  vulnerabilities?: {
-    severity: string
-    advisory_ghsa_id: string
-    advisory_summary: string
-    advisory_description: string
-  }[]
-}[]
+import * as z from 'zod'
+
+export const CompareResponseSchema = z.array(
+  z.object({
+    change_type: z.enum(['added', 'removed']),
+    manifest: z.string(),
+    ecosystem: z.string(),
+    name: z.string(),
+    version: z.string(),
+    package_url: z.string(),
+    license: z.string(),
+    repository_nwo: z.string(),
+    vulnerabilities: z
+      .array(
+        z.object({
+          severity: z.string(),
+          advisory_ghsa_id: z.string(),
+          advisory_summary: z.string(),
+          advisory_description: z.string()
+        })
+      )
+      .optional()
+  })
+)
+
+export type CompareResponse = z.infer<typeof CompareResponseSchema>
 
 export async function compare(
   _baseRef: string,
   _headRef: string
-): Promise<DependencyGraphCompareResponse> {
+): Promise<CompareResponse> {
   // todo: actually do an API call here!
-  return [
+  return CompareResponseSchema.parse([
     {
       change_type: 'removed',
       manifest: 'path/to/package-lock.json',
@@ -50,5 +60,5 @@ export async function compare(
         }
       ]
     }
-  ]
+  ])
 }
