@@ -45,7 +45,7 @@ exports.CompareResponseSchema = z.array(z.object({
     version: z.string(),
     package_url: z.string(),
     license: z.string(),
-    repository_nwo: z.string(),
+    source_repository_url: z.string(),
     vulnerabilities: z
         .array(z.object({
         severity: z.string(),
@@ -58,7 +58,7 @@ exports.CompareResponseSchema = z.array(z.object({
 function compare(_baseRef, _headRef) {
     return __awaiter(this, void 0, void 0, function* () {
         // todo: actually do an API call here!
-        return exports.CompareResponseSchema.parse([
+        return [
             {
                 change_type: 'removed',
                 manifest: 'path/to/package-lock.json',
@@ -67,7 +67,7 @@ function compare(_baseRef, _headRef) {
                 version: '1.1.0',
                 package_url: 'pkg:/npm/%40actions/core@1.1.0',
                 license: 'MIT',
-                repository_nwo: 'owner/sourcerepo'
+                source_repository_url: 'https://github.com/owner/sourcerepo'
             },
             {
                 change_type: 'added',
@@ -77,7 +77,7 @@ function compare(_baseRef, _headRef) {
                 version: '1.2.2',
                 package_url: 'pkg:/npm/%40actions/core@1.2.2',
                 license: 'MIT',
-                repository_nwo: 'owner/sourcerepo',
+                source_repository_url: 'https://github.com/owner/sourcerepo',
                 vulnerabilities: [
                     {
                         severity: 'critical',
@@ -87,7 +87,7 @@ function compare(_baseRef, _headRef) {
                     }
                 ]
             }
-        ]);
+        ];
     });
 }
 exports.compare = compare;

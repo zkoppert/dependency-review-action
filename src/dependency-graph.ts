@@ -9,7 +9,7 @@ export const CompareResponseSchema = z.array(
     version: z.string(),
     package_url: z.string(),
     license: z.string(),
-    repository_nwo: z.string(),
+    source_repository_url: z.string(),
     vulnerabilities: z
       .array(
         z.object({
@@ -30,7 +30,7 @@ export async function compare(
   _headRef: string
 ): Promise<CompareResponse> {
   // todo: actually do an API call here!
-  return CompareResponseSchema.parse([
+  return [
     {
       change_type: 'removed',
       manifest: 'path/to/package-lock.json',
@@ -39,7 +39,7 @@ export async function compare(
       version: '1.1.0',
       package_url: 'pkg:/npm/%40actions/core@1.1.0',
       license: 'MIT',
-      repository_nwo: 'owner/sourcerepo'
+      source_repository_url: 'https://github.com/owner/sourcerepo'
     },
     {
       change_type: 'added',
@@ -49,7 +49,7 @@ export async function compare(
       version: '1.2.2',
       package_url: 'pkg:/npm/%40actions/core@1.2.2',
       license: 'MIT',
-      repository_nwo: 'owner/sourcerepo',
+      source_repository_url: 'https://github.com/owner/sourcerepo',
       vulnerabilities: [
         {
           severity: 'critical',
@@ -60,5 +60,5 @@ export async function compare(
         }
       ]
     }
-  ])
+  ]
 }
