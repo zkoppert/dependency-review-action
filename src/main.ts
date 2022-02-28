@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as dependencyGraph from './dependency-graph'
 import * as github from '@actions/github'
+import * as z from 'zod'
 
 async function run(): Promise<void> {
   const context = github.context
@@ -10,18 +11,28 @@ async function run(): Promise<void> {
     return
   }
 
+  const repo = context.repo
+
+  const pull_request = z
+    .object({
+      number: z.number(),
+      base: z.object({ref: z.string(), sha: z.string()}),
+      head: z.object({ref: z.string(), sha: z.string()})
+    })
+    .parse(context.payload.pull_request)
+
   try {
-    core.info(`Repository\t\t ${context.repo.repo}`)
-    core.info(`Repo Owner\t\t ${context.repo.owner}`)
-    core.info(`Pull Request\t\t ${context.payload.pull_request.number}`)
-    core.info(`Base Branch\t\t ${context.payload.pull_request.base.ref}`)
-    core.info(`Head Branch\t\t ${context.payload.pull_request.head.ref}`)
-    core.info(`Base SHA\t\t ${context.payload.pull_request.base.sha}`)
-    core.info(`Head SHA\t\t ${context.payload.pull_request.head.sha}`)
+    core.info(`Repository\t\t ${repo.repo}`)
+    core.info(`Repo Owner\t\t ${repo.owner}`)
+    core.info(`Pull Request\t\t ${pull_request.number}`)
+    core.info(`Base Branch\t\t ${pull_request.base.ref}`)
+    core.info(`Head Branch\t\t ${pull_request.head.ref}`)
+    core.info(`Base SHA\t\t ${pull_request.base.sha}`)
+    core.info(`Head SHA\t\t ${pull_request.head.sha}`)
 
     const diff = await dependencyGraph.compare(
-      context.payload.pull_request.base.ref,
-      context.payload.pull_request.head.ref
+      pull_request.base.ref,
+      pull_request.head.ref
     )
 
     core.info(JSON.stringify(diff, null, 2))
