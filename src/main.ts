@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import * as dependencyGraph from './dependency_graph'
 
 async function run(): Promise<void> {
   const context = github.context
@@ -17,6 +18,13 @@ async function run(): Promise<void> {
     core.info(`Head Branch\t\t ${context.payload.pull_request.head.ref}`)
     core.info(`Base SHA\t\t ${context.payload.pull_request.base.sha}`)
     core.info(`Head SHA\t\t ${context.payload.pull_request.head.sha}`)
+
+    const diff = await dependencyGraph.compare(
+      context.payload.pull_request.base.ref,
+      context.payload.pull_request.head.ref
+    )
+
+    core.info(JSON.stringify(diff, null, 2))
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
