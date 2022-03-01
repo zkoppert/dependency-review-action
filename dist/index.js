@@ -57,7 +57,17 @@ exports.CompareResponseSchema = z.array(z.object({
 }));
 function compare(_baseRef, _headRef) {
     return __awaiter(this, void 0, void 0, function* () {
-        // todo: actually do an API call here!
+        // Add an artificial 500ms delay, and fail 50% of the time.
+        yield new Promise((accept, reject) => {
+            setTimeout(() => {
+                if (Math.random() > 0.5) {
+                    accept(null);
+                }
+                else {
+                    reject(new Error('oops, something went wrong'));
+                }
+            }, 500);
+        });
         return [
             {
                 change_type: 'removed',
@@ -132,6 +142,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const dependencyGraph = __importStar(__nccwpck_require__(4966));
 const github = __importStar(__nccwpck_require__(5438));
+const retryHelpers = __importStar(__nccwpck_require__(2155));
 const z = __importStar(__nccwpck_require__(3301));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -140,15 +151,15 @@ function run() {
             core.info('This action only works on pull requests');
             return;
         }
-        const repo = context.repo;
-        const pull_request = z
-            .object({
-            number: z.number(),
-            base: z.object({ ref: z.string(), sha: z.string() }),
-            head: z.object({ ref: z.string(), sha: z.string() })
-        })
-            .parse(context.payload.pull_request);
         try {
+            const repo = context.repo;
+            const pull_request = z
+                .object({
+                number: z.number(),
+                base: z.object({ ref: z.string(), sha: z.string() }),
+                head: z.object({ ref: z.string(), sha: z.string() })
+            })
+                .parse(context.payload.pull_request);
             core.info(`Repository\t\t ${repo.repo}`);
             core.info(`Repo Owner\t\t ${repo.owner}`);
             core.info(`Pull Request\t\t ${pull_request.number}`);
@@ -156,8 +167,13 @@ function run() {
             core.info(`Head Branch\t\t ${pull_request.head.ref}`);
             core.info(`Base SHA\t\t ${pull_request.base.sha}`);
             core.info(`Head SHA\t\t ${pull_request.head.sha}`);
-            const diff = yield dependencyGraph.compare(pull_request.base.ref, pull_request.head.ref);
+            const diff = yield retryHelpers.execute(() => __awaiter(this, void 0, void 0, function* () { return dependencyGraph.compare(pull_request.base.ref, pull_request.head.ref); }));
             core.info(JSON.stringify(diff, null, 2));
+            const octo = github.getOctokit(core.getInput('repo-token'));
+            const response = yield octo.request('GET /users/{username}', {
+                username: 'febuiles'
+            });
+            core.info(JSON.stringify(response, null, 2));
         }
         catch (error) {
             if (error instanceof Error)
@@ -166,6 +182,99 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 2155:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.execute = exports.RetryHelper = void 0;
+// Shamelessly stolen from https://github.com/actions/checkout/blob/main/src/retry-helper.ts
+const core = __importStar(__nccwpck_require__(2186));
+const defaultMaxAttempts = 3;
+const defaultMinSeconds = 10;
+const defaultMaxSeconds = 20;
+class RetryHelper {
+    constructor(maxAttempts = defaultMaxAttempts, minSeconds = defaultMinSeconds, maxSeconds = defaultMaxSeconds) {
+        this.maxAttempts = maxAttempts;
+        this.minSeconds = Math.floor(minSeconds);
+        this.maxSeconds = Math.floor(maxSeconds);
+        if (this.minSeconds > this.maxSeconds) {
+            throw new Error('min seconds should be less than or equal to max seconds');
+        }
+    }
+    execute(action) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            let attempt = 1;
+            while (attempt < this.maxAttempts) {
+                // Try
+                try {
+                    return yield action();
+                }
+                catch (err) {
+                    core.info((_a = err) === null || _a === void 0 ? void 0 : _a.message);
+                }
+                // Sleep
+                const seconds = this.getSleepAmount();
+                core.info(`Waiting ${seconds} seconds before trying again`);
+                yield this.sleep(seconds);
+                attempt++;
+            }
+            // Last attempt
+            return yield action();
+        });
+    }
+    getSleepAmount() {
+        return (Math.floor(Math.random() * (this.maxSeconds - this.minSeconds + 1)) +
+            this.minSeconds);
+    }
+    sleep(seconds) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+        });
+    }
+}
+exports.RetryHelper = RetryHelper;
+function execute(action) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const retryHelper = new RetryHelper();
+        return yield retryHelper.execute(action);
+    });
+}
+exports.execute = execute;
 
 
 /***/ }),
