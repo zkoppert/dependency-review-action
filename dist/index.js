@@ -161,6 +161,7 @@ function run() {
             })
                 .parse(context.payload.pull_request);
             console.log(JSON.stringify(pull_request, null, 2));
+            return;
             core.info(`Repository\t\t ${repo.repo}`);
             core.info(`Repo Owner\t\t ${repo.owner}`);
             core.info(`Pull Request\t\t ${pull_request.number}`);
