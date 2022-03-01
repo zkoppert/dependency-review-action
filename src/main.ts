@@ -48,7 +48,7 @@ async function run(): Promise<void> {
       }
     )
 
-    console.log(JSON.stringify(response, null, 2))
+    core.info(JSON.stringify(response, null, 2))
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
