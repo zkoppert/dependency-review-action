@@ -29,7 +29,16 @@ export async function compare(
   _baseRef: string,
   _headRef: string
 ): Promise<CompareResponse> {
-  // todo: actually do an API call here!
+  // Add an artificial 500ms delay, and fail 50% of the time.
+  await new Promise((accept, reject) => {
+    setTimeout(() => {
+      if (Math.random() > 0.5) {
+        accept(null)
+      } else {
+        reject(new Error('oops, something went wrong'))
+      }
+    }, 500)
+  })
   return [
     {
       change_type: 'removed',
