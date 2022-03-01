@@ -47,6 +47,18 @@ async function run(): Promise<void> {
       }
     )
 
+    core.info(
+      JSON.stringify(
+        {
+          owner: repo.owner,
+          repo: repo.repo,
+          basehead: `${pull_request.base.sha}...${pull_request.head.sha}`
+        },
+        null,
+        2
+      )
+    )
+
     core.info(JSON.stringify(response, null, 2))
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
