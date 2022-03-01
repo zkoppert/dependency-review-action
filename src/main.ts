@@ -39,12 +39,11 @@ async function run(): Promise<void> {
 
     const octo = github.getOctokit(core.getInput('repo-token'))
     const response = await octo.request(
-      'GET /repos/{owner}/{repo}/dependency-graph/{base}...{head}/diff',
+      'GET /repos/{owner}/{repo}/dependency-graph/{basehead}/diff',
       {
         owner: repo.owner,
         repo: repo.repo,
-        base: pull_request.base.sha,
-        head: pull_request.head.sha
+        basehead: `${pull_request.base.sha}...${pull_request.head.sha}`
       }
     )
 
