@@ -1,10 +1,24 @@
 #!/usr/bin/env ruby
 require 'json'
 require 'tempfile'
-require 'octokit'
 require 'open3'
+begin
+  require 'octokit'
+rescue LoadError
+  puts "Please run: gem install octokit"
+  exit -1
+end
 
 github_token = ENV["GITHUB_TOKEN"]
+if !github_token || github_token.empty?
+  puts "Please set the GITHUB_TOKEN environment variable"
+  exit -1
+end
+
+if !ARGV[0]
+  puts "Usage: script/dev <nwo>"
+  exit -1
+end
 repo_nwo, pr_number = ARGV[0].split('#')
 
 octo = Octokit::Client.new(access_token: github_token)
