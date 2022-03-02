@@ -101,6 +101,11 @@ function compare(_baseRef, _headRef) {
     });
 }
 exports.compare = compare;
+function getVulnerableChanges(response) {
+    return response.filter((change) => {
+        return change.vulnerabilities !== undefined;
+    });
+}
 
 
 /***/ }),

@@ -27,7 +27,6 @@
   "dependencies": {
     "@actions/core": "^1.6.0",
     "@actions/github": "^5.0.0",
-    "esbuild-register": "^3.3.2",
     "got": "^12.0.1",
     "nodemon": "^2.0.15",
     "zod": "^3.12.0"

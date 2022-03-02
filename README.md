@@ -9,13 +9,13 @@ for stubbed development:
 
 In one shell run:
 ```
-npm install nodemon esbuild-register --save-dev
+npm install nodemon --save-dev
 npm run build -- --watch
 ```
 
 Then in another terminal:
 ```
-env INPUT_REPO-TOKEN=hello GITHUB_REPOSITORY=some/repo GITHUB_EVENT_PATH=./event.json ./node_modules/.bin/nodemon -r esbuild-register lib/main.js 
+env INPUT_REPO-TOKEN=hello GITHUB_REPOSITORY=some/repo GITHUB_EVENT_PATH=./event.json ./node_modules/.bin/nodemon -r lib/main.js 
 ```
 
 Check
