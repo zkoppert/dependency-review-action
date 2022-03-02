@@ -15,7 +15,7 @@ async function run(): Promise<void> {
   try {
       const repo = context.repo
 
-    const pull_request = dependencyGraph.PullRequest.parse(github.context)
+    const pull_request = dependencyGraph.PullRequestSchema.parse(github.context)
 
     core.info(`Repository\t\t ${repo.repo}`)
     core.info(`Repo Owner\t\t ${repo.owner}`)
