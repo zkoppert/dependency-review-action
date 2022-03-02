@@ -49,9 +49,15 @@ EOF
 )
 event_file.close
 
-cmd = "env INPUT_REPO-TOKEN=#{github_token} GITHUB_REPOSITORY=#{repo_nwo} GITHUB_EVENT_PATH=#{event_file.path} ./node_modules/.bin/nodemon --exec \"node -r esbuild-register\" src/main.ts"
+dev_cmd_env = {
+  "INPUT_REPO-TOKEN" => github_token,
+  "GITHUB_REPOSITORY" => repo_nwo,
+  "GITHUB_EVENT_PATH" => event_file.path
+}
 
-Open3.popen2e(cmd) do |stdin, out|
+dev_cmd = "./node_modules/.bin/nodemon --exec \"node -r esbuild-register\" src/main.ts"
+
+Open3.popen2e(dev_cmd_env, dev_cmd) do |stdin, out|
   while line = out.gets
     puts line
   end
