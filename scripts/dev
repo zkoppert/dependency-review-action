@@ -30,23 +30,7 @@ Octokit.access_token = github_token
 pr = Octokit.pull_request(repo_nwo, pull_number)
 
 event_file = Tempfile.new
-event_file.write(
-<<-EOF
-{
-    "pull_request": {
-        "number": #{pr[:number]},
-        "base": {
-            "ref": "#{pr[:base][:ref]}",
-            "sha": "#{pr[:base][:sha]}"
-        },
-        "head": {
-          "ref": "#{pr[:head][:ref]}",
-          "sha": "#{pr[:head][:sha]}"
-        }
-    }
-}
-EOF
-)
+event_file.write("{ \"pull_request\": #{pr.to_h.to_json}}")
 event_file.close
 
 dev_cmd_env = {
