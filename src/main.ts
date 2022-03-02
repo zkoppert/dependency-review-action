@@ -42,7 +42,7 @@ async function run(): Promise<void> {
   }
 }
 
-async function fetchDiff(pull_request: z.ZodObject): Promise<string> {
+async function fetchDiff(pull_request: dependencyGraph.PullRequest): Promise<any> {
   const diff = await retryHelpers.execute(async () =>
   dependencyGraph.compare(pull_request.base.ref, pull_request.head.ref)
 )

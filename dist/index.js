@@ -35,8 +35,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.compare = exports.CompareResponseSchema = void 0;
+exports.compare = exports.CompareResponseSchema = exports.PullRequestSchema = void 0;
 const z = __importStar(__nccwpck_require__(3301));
+exports.PullRequestSchema = z.object({
+    number: z.number(),
+    base: z.object({ ref: z.string(), sha: z.string() }),
+    head: z.object({ ref: z.string(), sha: z.string() })
+});
 exports.CompareResponseSchema = z.array(z.object({
     change_type: z.enum(['added', 'removed']),
     manifest: z.string(),
@@ -101,6 +106,11 @@ function compare(_baseRef, _headRef) {
     });
 }
 exports.compare = compare;
+function getVulnerableChanges(response) {
+    return response.filter((change) => {
+        return change.vulnerabilities !== undefined;
+    });
+}
 
 
 /***/ }),
@@ -143,7 +153,6 @@ const core = __importStar(__nccwpck_require__(2186));
 const dependencyGraph = __importStar(__nccwpck_require__(4966));
 const github = __importStar(__nccwpck_require__(5438));
 const retryHelpers = __importStar(__nccwpck_require__(2155));
-const z = __importStar(__nccwpck_require__(3301));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const context = github.context;
@@ -153,13 +162,7 @@ function run() {
         }
         try {
             const repo = context.repo;
-            const pull_request = z
-                .object({
-                number: z.number(),
-                base: z.object({ ref: z.string(), sha: z.string() }),
-                head: z.object({ ref: z.string(), sha: z.string() })
-            })
-                .parse(context.payload.pull_request);
+            const pull_request = dependencyGraph.PullRequestSchema.parse(github.context);
             core.info(`Repository\t\t ${repo.repo}`);
             core.info(`Repo Owner\t\t ${repo.owner}`);
             core.info(`Pull Request\t\t ${pull_request.number}`);
@@ -179,6 +182,17 @@ function run() {
             if (error instanceof Error)
                 core.setFailed(error.message);
         }
+    });
+}
+function fetchDiff(pull_request) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const diff = yield retryHelpers.execute(() => __awaiter(this, void 0, void 0, function* () { return dependencyGraph.compare(pull_request.base.ref, pull_request.head.ref); }));
+        core.info(JSON.stringify(diff, null, 2));
+        const octo = github.getOctokit(core.getInput('repo-token'));
+        const response = yield octo.request('GET /users/{username}', {
+            username: 'febuiles'
+        });
+        core.info(JSON.stringify(response, null, 2));
     });
 }
 run();
