@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+require 'json'
+require 'tempfile'
+require 'octokit'
+require 'open3'
+
+github_token = ENV["GITHUB_TOKEN"]
+repo_nwo, pr_number = ARGV[0].split('#')
+
+octo = Octokit::Client.new(access_token: github_token)
+pr = octo.pull_request(repo_nwo, pr_number)
+
+event_file = Tempfile.new
+event_file.write("{ \"pull_request\": #{pr.to_h.to_json}}")
+event_file.close
+
+dev_cmd_env = {
+  "INPUT_REPO-TOKEN" => github_token,
+  "GITHUB_REPOSITORY" => repo_nwo,
+  "GITHUB_EVENT_PATH" => event_file.path
+}
+
+dev_cmd = "./node_modules/.bin/nodemon --exec \"node -r esbuild-register\" src/main.ts"
+
+Open3.popen2e(dev_cmd_env, dev_cmd) do |stdin, out|
+  while line = out.gets
+    puts line
+  end
+end
