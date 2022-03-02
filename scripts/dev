@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+require 'optparse'
+require 'json'
+require 'tempfile'
+require 'octokit'
+require 'open3'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: script/dev [options]"
+
+  opts.on("-tGITHUB_TOKEN", "--github-token=GITHUB_TOKEN", "GitHub access token (PAT)") do |v|
+    options[:github_token] = v
+  end
+
+  opts.on("-rREPO", "--repo=REPO", "Repo NWO") do |v|
+    options[:repo_nwo] = v
+  end
+
+  opts.on("-pPULL", "--pull=PULL_REQUEST_NUMBER", "Pull request number") do |v|
+    options[:pull_number] = v
+  end
+end.parse!
+
+github_token = options[:github_token] || ENV["GITHUB_TOKEN"]
+pull_number = options[:pull_number]
+repo_nwo = options[:repo_nwo]
+
+Octokit.access_token = github_token
+pr = Octokit.pull_request(repo_nwo, pull_number)
+
+event_file = Tempfile.new
+event_file.write(
+<<-EOF
+{
+    "pull_request": {
+        "number": #{pr[:number]},
+        "base": {
+            "ref": "#{pr[:base][:ref]}",
+            "sha": "#{pr[:base][:sha]}"
+        },
+        "head": {
+          "ref": "#{pr[:head][:ref]}",
+          "sha": "#{pr[:head][:sha]}"
+        }
+    }
+}
+EOF
+)
+event_file.close
+
+cmd = "env INPUT_REPO-TOKEN=#{github_token} GITHUB_REPOSITORY=#{repo_nwo} GITHUB_EVENT_PATH=#{event_file.path} ./node_modules/.bin/nodemon --exec \"node -r esbuild-register\" src/main.ts"
+
+Open3.popen2e(cmd) do |stdin, out|
+  while line = out.gets
+    puts line
+  end
+end
