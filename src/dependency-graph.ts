@@ -1,5 +1,11 @@
 import * as z from 'zod'
 
+export const PullRequestSchema = z.object({
+  number: z.number(),
+  base: z.object({ref: z.string(), sha: z.string()}),
+  head: z.object({ref: z.string(), sha: z.string()})
+})
+
 export const CompareResponseSchema = z.array(
   z.object({
     change_type: z.enum(['added', 'removed']),
@@ -23,6 +29,7 @@ export const CompareResponseSchema = z.array(
   })
 )
 
+export type PullRequest = z.infer<typeof PullRequestSchema>
 export type CompareResponse = z.infer<typeof CompareResponseSchema>
 
 export async function compare(
@@ -70,4 +77,10 @@ export async function compare(
       ]
     }
   ]
+}
+
+function getVulnerableChanges(response: CompareResponse): CompareResponse {
+  return response.filter((change) => {
+    return change.vulnerabilities !== undefined
+  })
 }

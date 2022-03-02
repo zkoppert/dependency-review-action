@@ -13,15 +13,9 @@ async function run(): Promise<void> {
   }
 
   try {
-    const repo = context.repo
+      const repo = context.repo
 
-    const pull_request = z
-      .object({
-        number: z.number(),
-        base: z.object({ref: z.string(), sha: z.string()}),
-        head: z.object({ref: z.string(), sha: z.string()})
-      })
-      .parse(context.payload.pull_request)
+    const pull_request = dependencyGraph.PullRequest.parse(github.context)
 
     core.info(`Repository\t\t ${repo.repo}`)
     core.info(`Repo Owner\t\t ${repo.owner}`)
@@ -46,6 +40,21 @@ async function run(): Promise<void> {
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
+}
+
+async function fetchDiff(pull_request: z.ZodObject): Promise<string> {
+  const diff = await retryHelpers.execute(async () =>
+  dependencyGraph.compare(pull_request.base.ref, pull_request.head.ref)
+)
+
+core.info(JSON.stringify(diff, null, 2))
+
+const octo = github.getOctokit(core.getInput('repo-token'))
+const response = await octo.request('GET /users/{username}', {
+  username: 'febuiles'
+})
+
+core.info(JSON.stringify(response, null, 2))
 }
 
 run()
