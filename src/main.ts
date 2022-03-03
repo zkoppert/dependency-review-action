@@ -34,7 +34,7 @@ async function run(): Promise<void> {
       ) {
         for (const vuln of change.vulnerabilities) {
           core.info(
-            `${renderSeverity(vuln.severity)}\t${vuln.advisory_summary} (${styles.color.grey.open}${change.manifest} » ${change.name}@${change.version}${styles.color.grey.close})`
+            `${renderSeverity(vuln.severity)} ${vuln.advisory_summary} (${styles.color.grey.open}${change.manifest} » ${change.name}@${change.version}${styles.color.grey.close})`
           )
           core.info(`https://github.com/advisories/${vuln.advisory_ghsa_id}`)
         }
