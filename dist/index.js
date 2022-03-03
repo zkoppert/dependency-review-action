@@ -69,6 +69,7 @@ exports.CompareResponseSchema = z.array(z.object({
 const octo = github.getOctokit(core.getInput('repo-token'));
 function compare(owner, repo, baseRef, headRef) {
     return __awaiter(this, void 0, void 0, function* () {
+        // TODO: Add backoff
         // Add an artificial 500ms delay, and fail 50% of the time.
         /*await new Promise((accept, reject) => {
           setTimeout(() => {
