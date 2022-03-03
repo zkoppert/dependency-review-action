@@ -148,8 +148,8 @@ function run() {
                     change.vulnerabilities !== undefined &&
                     change.vulnerabilities.length > 0) {
                     for (const vuln of change.vulnerabilities) {
-                        core.startGroup(`${vuln.advisory_summary} (${renderSeverity(vuln.severity)}) – https://github.com/advisories/${vuln.advisory_ghsa_id}`);
-                        core.endGroup();
+                        core.info(`${vuln.advisory_summary} (${renderSeverity(vuln.severity)})`);
+                        core.info(`  https://github.com/advisories/${vuln.advisory_ghsa_id}`);
                     }
                     failed = true;
                 }

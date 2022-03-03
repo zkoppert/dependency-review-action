@@ -33,12 +33,10 @@ async function run(): Promise<void> {
         change.vulnerabilities.length > 0
       ) {
         for (const vuln of change.vulnerabilities) {
-          core.startGroup(
-            `${vuln.advisory_summary} (${renderSeverity(
-              vuln.severity
-            )}) – https://github.com/advisories/${vuln.advisory_ghsa_id}`
+          core.info(
+            `${vuln.advisory_summary} (${renderSeverity(vuln.severity)})`
           )
-          core.endGroup()
+          core.info(`  https://github.com/advisories/${vuln.advisory_ghsa_id}`)
         }
         failed = true
       }
