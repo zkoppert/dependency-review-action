@@ -36,7 +36,7 @@ async function run(): Promise<void> {
           core.info(
             `${change.name}${styles.color.grey.open}@${change.version}${styles.color.grey.close} - ${styles.color.grey.open}${vuln.advisory_summary}${styles.color.grey.close} (${styles.color.grey.open}in${styles.color.grey.close} ${change.manifest}) ${renderSeverity(vuln.severity)}`
           )
-          core.info(`  https://github.com/advisories/${vuln.advisory_ghsa_id}`)
+          core.info(`  - https://github.com/advisories/${vuln.advisory_ghsa_id}`)
         }
         failed = true
       }

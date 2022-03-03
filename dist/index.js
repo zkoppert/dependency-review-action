@@ -149,7 +149,7 @@ function run() {
                     change.vulnerabilities.length > 0) {
                     for (const vuln of change.vulnerabilities) {
                         core.info(`${change.name}${ansi_styles_1.default.color.grey.open}@${change.version}${ansi_styles_1.default.color.grey.close} - ${ansi_styles_1.default.color.grey.open}${vuln.advisory_summary}${ansi_styles_1.default.color.grey.close} (${ansi_styles_1.default.color.grey.open}in${ansi_styles_1.default.color.grey.close} ${change.manifest}) ${renderSeverity(vuln.severity)}`);
-                        core.info(`  https://github.com/advisories/${vuln.advisory_ghsa_id}`);
+                        core.info(`  - https://github.com/advisories/${vuln.advisory_ghsa_id}`);
                     }
                     failed = true;
                 }
