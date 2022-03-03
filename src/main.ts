@@ -2,7 +2,6 @@ import * as core from '@actions/core'
 import * as dependencyGraph from './dependency-graph'
 import * as github from '@actions/github'
 import * as retryHelpers from './retry-helper'
-import * as z from 'zod'
 import styles from 'ansi-styles'
 
 async function run(): Promise<void> {
@@ -17,7 +16,7 @@ async function run(): Promise<void> {
     )
 
     const retryHelper = new retryHelpers.RetryHelper(3, 1, 2)
-    const compareResponse = await retryHelper.execute(() =>
+    const compareResponse = await retryHelper.execute(async () =>
       dependencyGraph.compare(
         github.context.repo.owner,
         github.context.repo.repo,
@@ -46,7 +45,9 @@ async function run(): Promise<void> {
     }
 
     if (failed) {
-      core.setFailed('this pr introduces vulnerabilities')
+      core.setFailed(
+        "Yo, I'm sorry but you are introduced some vulnerabilities here."
+      )
     }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)

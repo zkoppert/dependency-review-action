@@ -36,6 +36,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.compare = exports.CompareResponseSchema = exports.PullRequestSchema = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const github = __importStar(__nccwpck_require__(5438));
 const z = __importStar(__nccwpck_require__(3301));
 exports.PullRequestSchema = z.object({
     number: z.number(),
@@ -50,67 +52,38 @@ exports.CompareResponseSchema = z.array(z.object({
     version: z.string(),
     package_url: z.string(),
     license: z.string(),
-    source_repository_url: z.string(),
+    source_repository_url: z.string().nullable(),
     vulnerabilities: z
         .array(z.object({
-        severity: z.string(),
+        severity: z.enum(['critical', 'high', 'moderate', 'low']),
         advisory_ghsa_id: z.string(),
         advisory_summary: z.string(),
         advisory_description: z.string()
     }))
         .optional()
 }));
-function compare(_baseRef, _headRef) {
+const octo = github.getOctokit(core.getInput('repo-token'));
+function compare(owner, repo, baseRef, headRef) {
     return __awaiter(this, void 0, void 0, function* () {
         // Add an artificial 500ms delay, and fail 50% of the time.
-        yield new Promise((accept, reject) => {
-            setTimeout(() => {
-                if (Math.random() > 0.5) {
-                    accept(null);
-                }
-                else {
-                    reject(new Error('oops, something went wrong'));
-                }
-            }, 500);
-        });
-        return [
-            {
-                change_type: 'removed',
-                manifest: 'path/to/package-lock.json',
-                ecosystem: 'npm',
-                name: '@actions/core',
-                version: '1.1.0',
-                package_url: 'pkg:/npm/%40actions/core@1.1.0',
-                license: 'MIT',
-                source_repository_url: 'https://github.com/owner/sourcerepo'
-            },
-            {
-                change_type: 'added',
-                manifest: 'path/to/package-lock.json',
-                ecosystem: 'npm',
-                name: '@actions/core',
-                version: '1.2.2',
-                package_url: 'pkg:/npm/%40actions/core@1.2.2',
-                license: 'MIT',
-                source_repository_url: 'https://github.com/owner/sourcerepo',
-                vulnerabilities: [
-                    {
-                        severity: 'critical',
-                        advisory_ghsa_id: 'GHSA-rf4j-j272-fj86',
-                        advisory_summary: 'lorem ipsum hackum',
-                        advisory_description: 'tall dark and felonious; enjoys advanced persistent walks through your infra'
-                    }
-                ]
+        /*await new Promise((accept, reject) => {
+          setTimeout(() => {
+            if (Math.random() > 0.2) {
+              accept(null)
+            } else {
+              reject(new Error('oops, something went wrong'))
             }
-        ];
+          }, 500)
+        })*/
+        const response = yield octo.request('GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}', {
+            owner,
+            repo,
+            basehead: `${baseRef}...${headRef}`
+        });
+        return exports.CompareResponseSchema.parse(response.data);
     });
 }
 exports.compare = compare;
-function getVulnerableChanges(response) {
-    return response.filter((change) => {
-        return change.vulnerabilities !== undefined;
-    });
-}
 
 
 /***/ }),
@@ -148,51 +121,49 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const dependencyGraph = __importStar(__nccwpck_require__(4966));
 const github = __importStar(__nccwpck_require__(5438));
 const retryHelpers = __importStar(__nccwpck_require__(2155));
+const ansi_styles_1 = __importDefault(__nccwpck_require__(6844));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        const context = github.context;
-        if (!context.payload.pull_request) {
-            core.info('This action only works on pull requests');
-            return;
-        }
         try {
-            const repo = context.repo;
-            const pull_request = dependencyGraph.PullRequestSchema.parse(github.context);
-            core.info(`Repository\t\t ${repo.repo}`);
-            core.info(`Repo Owner\t\t ${repo.owner}`);
-            core.info(`Pull Request\t\t ${pull_request.number}`);
-            core.info(`Base Branch\t\t ${pull_request.base.ref}`);
-            core.info(`Head Branch\t\t ${pull_request.head.ref}`);
-            core.info(`Base SHA\t\t ${pull_request.base.sha}`);
-            core.info(`Head SHA\t\t ${pull_request.head.sha}`);
-            const diff = yield retryHelpers.execute(() => __awaiter(this, void 0, void 0, function* () { return dependencyGraph.compare(pull_request.base.ref, pull_request.head.ref); }));
-            core.info(JSON.stringify(diff, null, 2));
-            const octo = github.getOctokit(core.getInput('repo-token'));
-            const response = yield octo.request('GET /users/{username}', {
-                username: 'febuiles'
-            });
-            core.info(JSON.stringify(response, null, 2));
+            if (github.context.payload.pull_request === undefined) {
+                core.info('This action only works on pull requests');
+                return;
+            }
+            const pull_request = dependencyGraph.PullRequestSchema.parse(github.context.payload.pull_request);
+            const retryHelper = new retryHelpers.RetryHelper(3, 1, 2);
+            const compareResponse = yield retryHelper.execute(() => __awaiter(this, void 0, void 0, function* () {
+                return dependencyGraph.compare(github.context.repo.owner, github.context.repo.repo, pull_request.base.ref, pull_request.head.ref);
+            }));
+            let failed = false;
+            for (const change of compareResponse) {
+                if (change.change_type === 'added' &&
+                    change.vulnerabilities !== undefined &&
+                    change.vulnerabilities.length > 0) {
+                    for (const vuln of change.vulnerabilities) {
+                        core.startGroup(`${vuln.advisory_ghsa_id} (${ansi_styles_1.default.color.red.open}${vuln.severity}${ansi_styles_1.default.color.red.close}) -- ${vuln.advisory_summary}`);
+                        core.info(vuln.advisory_description);
+                        core.info(`https://github.com/advisories/${vuln.advisory_ghsa_id}`);
+                        core.endGroup();
+                    }
+                    failed = true;
+                }
+            }
+            if (failed) {
+                core.setFailed("Yo, I'm sorry but you are introduced some vulnerabilities here.");
+            }
         }
         catch (error) {
             if (error instanceof Error)
                 core.setFailed(error.message);
         }
-    });
-}
-function fetchDiff(pull_request) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const diff = yield retryHelpers.execute(() => __awaiter(this, void 0, void 0, function* () { return dependencyGraph.compare(pull_request.base.ref, pull_request.head.ref); }));
-        core.info(JSON.stringify(diff, null, 2));
-        const octo = github.getOctokit(core.getInput('repo-token'));
-        const response = yield octo.request('GET /users/{username}', {
-            username: 'febuiles'
-        });
-        core.info(JSON.stringify(response, null, 2));
     });
 }
 run();
@@ -12316,6 +12287,234 @@ module.exports = require("zlib");
 
 /***/ }),
 
+/***/ 6844:
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
+
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+const ANSI_BACKGROUND_OFFSET = 10;
+
+const wrapAnsi16 = (offset = 0) => code => `\u001B[${code + offset}m`;
+
+const wrapAnsi256 = (offset = 0) => code => `\u001B[${38 + offset};5;${code}m`;
+
+const wrapAnsi16m = (offset = 0) => (red, green, blue) => `\u001B[${38 + offset};2;${red};${green};${blue}m`;
+
+function assembleStyles() {
+	const codes = new Map();
+	const styles = {
+		modifier: {
+			reset: [0, 0],
+			// 21 isn't widely supported and 22 does the same thing
+			bold: [1, 22],
+			dim: [2, 22],
+			italic: [3, 23],
+			underline: [4, 24],
+			overline: [53, 55],
+			inverse: [7, 27],
+			hidden: [8, 28],
+			strikethrough: [9, 29]
+		},
+		color: {
+			black: [30, 39],
+			red: [31, 39],
+			green: [32, 39],
+			yellow: [33, 39],
+			blue: [34, 39],
+			magenta: [35, 39],
+			cyan: [36, 39],
+			white: [37, 39],
+
+			// Bright color
+			blackBright: [90, 39],
+			redBright: [91, 39],
+			greenBright: [92, 39],
+			yellowBright: [93, 39],
+			blueBright: [94, 39],
+			magentaBright: [95, 39],
+			cyanBright: [96, 39],
+			whiteBright: [97, 39]
+		},
+		bgColor: {
+			bgBlack: [40, 49],
+			bgRed: [41, 49],
+			bgGreen: [42, 49],
+			bgYellow: [43, 49],
+			bgBlue: [44, 49],
+			bgMagenta: [45, 49],
+			bgCyan: [46, 49],
+			bgWhite: [47, 49],
+
+			// Bright color
+			bgBlackBright: [100, 49],
+			bgRedBright: [101, 49],
+			bgGreenBright: [102, 49],
+			bgYellowBright: [103, 49],
+			bgBlueBright: [104, 49],
+			bgMagentaBright: [105, 49],
+			bgCyanBright: [106, 49],
+			bgWhiteBright: [107, 49]
+		}
+	};
+
+	// Alias bright black as gray (and grey)
+	styles.color.gray = styles.color.blackBright;
+	styles.bgColor.bgGray = styles.bgColor.bgBlackBright;
+	styles.color.grey = styles.color.blackBright;
+	styles.bgColor.bgGrey = styles.bgColor.bgBlackBright;
+
+	for (const [groupName, group] of Object.entries(styles)) {
+		for (const [styleName, style] of Object.entries(group)) {
+			styles[styleName] = {
+				open: `\u001B[${style[0]}m`,
+				close: `\u001B[${style[1]}m`
+			};
+
+			group[styleName] = styles[styleName];
+
+			codes.set(style[0], style[1]);
+		}
+
+		Object.defineProperty(styles, groupName, {
+			value: group,
+			enumerable: false
+		});
+	}
+
+	Object.defineProperty(styles, 'codes', {
+		value: codes,
+		enumerable: false
+	});
+
+	styles.color.close = '\u001B[39m';
+	styles.bgColor.close = '\u001B[49m';
+
+	styles.color.ansi = wrapAnsi16();
+	styles.color.ansi256 = wrapAnsi256();
+	styles.color.ansi16m = wrapAnsi16m();
+	styles.bgColor.ansi = wrapAnsi16(ANSI_BACKGROUND_OFFSET);
+	styles.bgColor.ansi256 = wrapAnsi256(ANSI_BACKGROUND_OFFSET);
+	styles.bgColor.ansi16m = wrapAnsi16m(ANSI_BACKGROUND_OFFSET);
+
+	// From https://github.com/Qix-/color-convert/blob/3f0e0d4e92e235796ccb17f6e85c72094a651f49/conversions.js
+	Object.defineProperties(styles, {
+		rgbToAnsi256: {
+			value: (red, green, blue) => {
+				// We use the extended greyscale palette here, with the exception of
+				// black and white. normal palette only has 4 greyscale shades.
+				if (red === green && green === blue) {
+					if (red < 8) {
+						return 16;
+					}
+
+					if (red > 248) {
+						return 231;
+					}
+
+					return Math.round(((red - 8) / 247) * 24) + 232;
+				}
+
+				return 16 +
+					(36 * Math.round(red / 255 * 5)) +
+					(6 * Math.round(green / 255 * 5)) +
+					Math.round(blue / 255 * 5);
+			},
+			enumerable: false
+		},
+		hexToRgb: {
+			value: hex => {
+				const matches = /(?<colorString>[a-f\d]{6}|[a-f\d]{3})/i.exec(hex.toString(16));
+				if (!matches) {
+					return [0, 0, 0];
+				}
+
+				let {colorString} = matches.groups;
+
+				if (colorString.length === 3) {
+					colorString = colorString.split('').map(character => character + character).join('');
+				}
+
+				const integer = Number.parseInt(colorString, 16);
+
+				return [
+					(integer >> 16) & 0xFF,
+					(integer >> 8) & 0xFF,
+					integer & 0xFF
+				];
+			},
+			enumerable: false
+		},
+		hexToAnsi256: {
+			value: hex => styles.rgbToAnsi256(...styles.hexToRgb(hex)),
+			enumerable: false
+		},
+		ansi256ToAnsi: {
+			value: code => {
+				if (code < 8) {
+					return 30 + code;
+				}
+
+				if (code < 16) {
+					return 90 + (code - 8);
+				}
+
+				let red;
+				let green;
+				let blue;
+
+				if (code >= 232) {
+					red = (((code - 232) * 10) + 8) / 255;
+					green = red;
+					blue = red;
+				} else {
+					code -= 16;
+
+					const remainder = code % 36;
+
+					red = Math.floor(code / 36) / 5;
+					green = Math.floor(remainder / 6) / 5;
+					blue = (remainder % 6) / 5;
+				}
+
+				const value = Math.max(red, green, blue) * 2;
+
+				if (value === 0) {
+					return 30;
+				}
+
+				let result = 30 + ((Math.round(blue) << 2) | (Math.round(green) << 1) | Math.round(red));
+
+				if (value === 2) {
+					result += 60;
+				}
+
+				return result;
+			},
+			enumerable: false
+		},
+		rgbToAnsi: {
+			value: (red, green, blue) => styles.ansi256ToAnsi(styles.rgbToAnsi256(red, green, blue)),
+			enumerable: false
+		},
+		hexToAnsi: {
+			value: hex => styles.ansi256ToAnsi(styles.hexToAnsi256(hex)),
+			enumerable: false
+		}
+	});
+
+	return styles;
+}
+
+const ansiStyles = assembleStyles();
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (ansiStyles);
+
+
+/***/ }),
+
 /***/ 1907:
 /***/ ((module) => {
 
@@ -12357,6 +12556,34 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";

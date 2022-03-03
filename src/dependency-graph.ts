@@ -1,6 +1,6 @@
-import * as z from 'zod'
-import * as github from '@actions/github'
 import * as core from '@actions/core'
+import * as github from '@actions/github'
+import * as z from 'zod'
 
 export const PullRequestSchema = z.object({
   number: z.number(),
@@ -56,48 +56,10 @@ export async function compare(
   const response = await octo.request(
     'GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}',
     {
-      owner: owner,
-      repo: repo,
+      owner,
+      repo,
       basehead: `${baseRef}...${headRef}`
     }
   )
   return CompareResponseSchema.parse(response.data)
 }
-
-function getVulnerableChanges(response: CompareResponse): CompareResponse {
-  return response.filter(change => {
-    return change.vulnerabilities !== undefined
-  })
-}
-
-const SAMPLE_RESPONSE: CompareResponse = [
-  {
-    change_type: 'removed',
-    manifest: 'path/to/package-lock.json',
-    ecosystem: 'npm',
-    name: '@actions/core',
-    version: '1.1.0',
-    package_url: 'pkg:/npm/%40actions/core@1.1.0',
-    license: 'MIT',
-    source_repository_url: 'https://github.com/owner/sourcerepo'
-  },
-  {
-    change_type: 'added',
-    manifest: 'path/to/package-lock.json',
-    ecosystem: 'npm',
-    name: '@actions/core',
-    version: '1.2.2',
-    package_url: 'pkg:/npm/%40actions/core@1.2.2',
-    license: 'MIT',
-    source_repository_url: 'https://github.com/owner/sourcerepo',
-    vulnerabilities: [
-      {
-        severity: 'critical',
-        advisory_ghsa_id: 'GHSA-rf4j-j272-fj86',
-        advisory_summary: 'lorem ipsum hackum',
-        advisory_description:
-          'tall dark and felonious; enjoys advanced persistent walks through your infra'
-      }
-    ]
-  }
-]
