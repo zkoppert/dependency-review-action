@@ -63,7 +63,7 @@ function renderSeverity(
       low: 'grey'
     } as const
   )[severity]
-  return `${styles.color[color].open}${severity.padEnd(9)}${styles.color[color].close}`
+  return `${styles.color[color].open}(${severity})${styles.color[color].close}`
 }
 
 run()

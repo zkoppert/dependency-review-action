@@ -171,7 +171,7 @@ function renderSeverity(severity) {
         moderate: 'yellow',
         low: 'grey'
     }[severity];
-    return `${ansi_styles_1.default.color[color].open}${severity.padEnd(9)}${ansi_styles_1.default.color[color].close}`;
+    return `${ansi_styles_1.default.color[color].open}(${severity})${ansi_styles_1.default.color[color].close}`;
 }
 run();
 
