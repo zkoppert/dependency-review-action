@@ -42,6 +42,7 @@ export async function compare(
   baseRef: string,
   headRef: string
 ): Promise<CompareResponse> {
+  // TODO: Add backoff
   // Add an artificial 500ms delay, and fail 50% of the time.
   /*await new Promise((accept, reject) => {
     setTimeout(() => {

@@ -8,7 +8,11 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -65,6 +69,7 @@ exports.CompareResponseSchema = z.array(z.object({
 const octo = github.getOctokit(core.getInput('repo-token'));
 function compare(owner, repo, baseRef, headRef) {
     return __awaiter(this, void 0, void 0, function* () {
+        // TODO: Add backoff
         // Add an artificial 500ms delay, and fail 50% of the time.
         /*await new Promise((accept, reject) => {
           setTimeout(() => {
@@ -95,7 +100,11 @@ exports.compare = compare;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -148,8 +157,8 @@ function run() {
                     change.vulnerabilities !== undefined &&
                     change.vulnerabilities.length > 0) {
                     for (const vuln of change.vulnerabilities) {
-                        core.info(`${vuln.advisory_summary} (${renderSeverity(vuln.severity)}) – https://github.com/advisories/${vuln.advisory_ghsa_id}`);
-                        core.info(`${ansi_styles_1.default.color.grey.open}${change.manifest} » ${change.name}@${change.version}${ansi_styles_1.default.color.grey.close}`);
+                        core.info(`${ansi_styles_1.default.bold.open}${change.manifest} » ${change.name}@${change.version}${ansi_styles_1.default.bold.close} – ${vuln.advisory_summary} ${renderSeverity(vuln.severity)}`);
+                        core.info(`  ↪ https://github.com/advisories/${vuln.advisory_ghsa_id}`);
                     }
                     failed = true;
                 }
@@ -171,7 +180,7 @@ function renderSeverity(severity) {
         moderate: 'yellow',
         low: 'grey'
     }[severity];
-    return `${ansi_styles_1.default.color[color].open}${severity} severity${ansi_styles_1.default.color[color].close}`;
+    return `${ansi_styles_1.default.color[color].open}(${severity} severity)${ansi_styles_1.default.color[color].close}`;
 }
 run();
 
@@ -185,7 +194,11 @@ run();
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -228,7 +241,6 @@ class RetryHelper {
         }
     }
     execute(action) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
             let attempt = 1;
             while (attempt < this.maxAttempts) {
@@ -237,7 +249,7 @@ class RetryHelper {
                     return yield action();
                 }
                 catch (err) {
-                    core.info((_a = err) === null || _a === void 0 ? void 0 : _a.message);
+                    core.info(err === null || err === void 0 ? void 0 : err.message);
                 }
                 // Sleep
                 const seconds = this.getSleepAmount();
@@ -8879,7 +8891,7 @@ var setErrorMap = function (map) {
     exports.overrideErrorMap = map;
 };
 exports.setErrorMap = setErrorMap;
-//# sourceMappingURL=ZodError.js.map
+
 
 /***/ }),
 
@@ -8890,7 +8902,11 @@ exports.setErrorMap = setErrorMap;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -8903,7 +8919,7 @@ __exportStar(__nccwpck_require__(888), exports);
 __exportStar(__nccwpck_require__(9449), exports);
 __exportStar(__nccwpck_require__(9335), exports);
 __exportStar(__nccwpck_require__(9892), exports);
-//# sourceMappingURL=external.js.map
+
 
 /***/ }),
 
@@ -8923,7 +8939,7 @@ var errorUtil;
         return typeof message === "string" ? message : message === null || message === void 0 ? void 0 : message.message;
     };
 })(errorUtil = exports.errorUtil || (exports.errorUtil = {}));
-//# sourceMappingURL=errorUtil.js.map
+
 
 /***/ }),
 
@@ -9267,7 +9283,7 @@ var isAsync = function (x) {
     return typeof Promise !== undefined && x instanceof Promise;
 };
 exports.isAsync = isAsync;
-//# sourceMappingURL=parseUtil.js.map
+
 
 /***/ }),
 
@@ -9277,7 +9293,7 @@ exports.isAsync = isAsync;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-//# sourceMappingURL=typeAliases.js.map
+
 
 /***/ }),
 
@@ -9382,7 +9398,7 @@ var util;
             return typeof val === "number" && isFinite(val) && Math.floor(val) === val;
         };
 })(util = exports.util || (exports.util = {}));
-//# sourceMappingURL=util.js.map
+
 
 /***/ }),
 
@@ -9393,7 +9409,11 @@ var util;
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -9418,7 +9438,8 @@ exports.z = void 0;
 var mod = __importStar(__nccwpck_require__(9906));
 exports.z = mod;
 __exportStar(__nccwpck_require__(9906), exports);
-//# sourceMappingURL=index.js.map
+exports["default"] = mod;
+
 
 /***/ }),
 
@@ -9526,8 +9547,8 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.lazy = exports.intersection = exports["instanceof"] = exports["function"] = exports["enum"] = exports.effect = exports.discriminatedUnion = exports.date = exports.boolean = exports.bigint = exports.array = exports.any = exports.ZodFirstPartyTypeKind = exports.late = exports.ZodSchema = exports.Schema = exports.custom = exports.ZodDefault = exports.ZodNullable = exports.ZodOptional = exports.ZodTransformer = exports.ZodEffects = exports.ZodPromise = exports.ZodNativeEnum = exports.ZodEnum = exports.ZodLiteral = exports.ZodLazy = exports.ZodFunction = exports.ZodSet = exports.ZodMap = exports.ZodRecord = exports.ZodTuple = exports.ZodIntersection = exports.ZodDiscriminatedUnion = exports.ZodUnion = exports.ZodObject = exports.objectUtil = exports.ZodArray = exports.ZodVoid = exports.ZodNever = exports.ZodUnknown = exports.ZodAny = exports.ZodNull = exports.ZodUndefined = exports.ZodDate = exports.ZodBoolean = exports.ZodBigInt = exports.ZodNumber = exports.ZodString = exports.ZodType = void 0;
-exports["void"] = exports.unknown = exports.union = exports.undefined = exports.tuple = exports.transformer = exports.string = exports.strictObject = exports.set = exports.record = exports.promise = exports.preprocess = exports.ostring = exports.optional = exports.onumber = exports.oboolean = exports.object = exports.number = exports.nullable = exports["null"] = exports.never = exports.nativeEnum = exports.map = exports.literal = void 0;
+exports.intersection = exports["instanceof"] = exports["function"] = exports["enum"] = exports.effect = exports.discriminatedUnion = exports.date = exports.boolean = exports.bigint = exports.array = exports.any = exports.ZodFirstPartyTypeKind = exports.late = exports.ZodSchema = exports.Schema = exports.custom = exports.ZodNaN = exports.ZodDefault = exports.ZodNullable = exports.ZodOptional = exports.ZodTransformer = exports.ZodEffects = exports.ZodPromise = exports.ZodNativeEnum = exports.ZodEnum = exports.ZodLiteral = exports.ZodLazy = exports.ZodFunction = exports.ZodSet = exports.ZodMap = exports.ZodRecord = exports.ZodTuple = exports.ZodIntersection = exports.ZodDiscriminatedUnion = exports.ZodUnion = exports.ZodObject = exports.objectUtil = exports.ZodArray = exports.ZodVoid = exports.ZodNever = exports.ZodUnknown = exports.ZodAny = exports.ZodNull = exports.ZodUndefined = exports.ZodDate = exports.ZodBoolean = exports.ZodBigInt = exports.ZodNumber = exports.ZodString = exports.ZodType = void 0;
+exports["void"] = exports.unknown = exports.union = exports.undefined = exports.tuple = exports.transformer = exports.string = exports.strictObject = exports.set = exports.record = exports.promise = exports.preprocess = exports.ostring = exports.optional = exports.onumber = exports.oboolean = exports.object = exports.number = exports.nullable = exports["null"] = exports.never = exports.nativeEnum = exports.nan = exports.map = exports.literal = exports.lazy = void 0;
 var errorUtil_1 = __nccwpck_require__(2513);
 var parseUtil_1 = __nccwpck_require__(888);
 var util_1 = __nccwpck_require__(3985);
@@ -9570,8 +9591,26 @@ var ZodType = /** @class */ (function () {
         this.spa = this.safeParseAsync;
         this.superRefine = this._refinement;
         this._def = def;
+        this.parse = this.parse.bind(this);
+        this.safeParse = this.safeParse.bind(this);
+        this.parseAsync = this.parseAsync.bind(this);
+        this.safeParseAsync = this.safeParseAsync.bind(this);
+        this.spa = this.spa.bind(this);
+        this.refine = this.refine.bind(this);
+        this.refinement = this.refinement.bind(this);
+        this.superRefine = this.superRefine.bind(this);
+        this.optional = this.optional.bind(this);
+        this.nullable = this.nullable.bind(this);
+        this.nullish = this.nullish.bind(this);
+        this.array = this.array.bind(this);
+        this.promise = this.promise.bind(this);
+        this.or = this.or.bind(this);
+        this.and = this.and.bind(this);
         this.transform = this.transform.bind(this);
         this.default = this.default.bind(this);
+        this.describe = this.describe.bind(this);
+        this.isOptional = this.isOptional.bind(this);
+        this.isNullable = this.isNullable.bind(this);
     }
     Object.defineProperty(ZodType.prototype, "description", {
         get: function () {
@@ -10521,9 +10560,11 @@ var objectUtil;
         return __assign(__assign({}, first), second);
     };
 })(objectUtil = exports.objectUtil || (exports.objectUtil = {}));
-var AugmentFactory = function (def) { return function (augmentation) {
-    return new ZodObject(__assign(__assign({}, def), { shape: function () { return (__assign(__assign({}, def.shape()), augmentation)); } }));
-}; };
+var AugmentFactory = function (def) {
+    return function (augmentation) {
+        return new ZodObject(__assign(__assign({}, def), { shape: function () { return (__assign(__assign({}, def.shape()), augmentation)); } }));
+    };
+};
 function deepPartialify(schema) {
     if (schema instanceof ZodObject) {
         var newShape_1 = {};
@@ -10584,7 +10625,7 @@ var ZodObject = /** @class */ (function (_super) {
         }
         var _e = this._getCached(), shape = _e.shape, shapeKeys = _e.keys;
         var dataKeys = util_1.util.objectKeys(ctx.data);
-        var extraKeys = dataKeys.filter(function (k) { return !(k in shape); });
+        var extraKeys = dataKeys.filter(function (k) { return !shapeKeys.includes(k); });
         var pairs = [];
         try {
             for (var shapeKeys_1 = __values(shapeKeys), shapeKeys_1_1 = shapeKeys_1.next(); !shapeKeys_1_1.done; shapeKeys_1_1 = shapeKeys_1.next()) {
@@ -10765,11 +10806,17 @@ var ZodObject = /** @class */ (function (_super) {
      * upgrade if you are experiencing issues.
      */
     ZodObject.prototype.merge = function (merging) {
-        var mergedShape = objectUtil.mergeShapes(this._def.shape(), merging._def.shape());
+        var _this = this;
+        // const mergedShape = objectUtil.mergeShapes(
+        //   this._def.shape(),
+        //   merging._def.shape()
+        // );
         var merged = new ZodObject({
             unknownKeys: merging._def.unknownKeys,
             catchall: merging._def.catchall,
-            shape: function () { return mergedShape; },
+            shape: function () {
+                return objectUtil.mergeShapes(_this._def.shape(), merging._def.shape());
+            },
             typeName: ZodFirstPartyTypeKind.ZodObject,
         });
         return merged;
@@ -11571,8 +11618,7 @@ var ZodFunction = /** @class */ (function (_super) {
                                 return [4 /*yield*/, fn.apply(void 0, __spreadArray([], __read(parsedArgs), false))];
                             case 2:
                                 result = _a.sent();
-                                return [4 /*yield*/, this._def
-                                        .returns._def.type
+                                return [4 /*yield*/, this._def.returns._def.type
                                         .parseAsync(result, params)
                                         .catch(function (e) {
                                         error.addIssue(makeReturnsIssue(result, e));
@@ -11806,6 +11852,13 @@ var ZodNativeEnum = /** @class */ (function (_super) {
         }
         return (0, parseUtil_1.OK)(ctx.data);
     };
+    Object.defineProperty(ZodNativeEnum.prototype, "enum", {
+        get: function () {
+            return this._def.values;
+        },
+        enumerable: false,
+        configurable: true
+    });
     ZodNativeEnum.create = function (values, params) {
         return new ZodNativeEnum(__assign({ values: values, typeName: ZodFirstPartyTypeKind.ZodNativeEnum }, processCreateParams(params)));
     };
@@ -12052,6 +12105,29 @@ var ZodDefault = /** @class */ (function (_super) {
     return ZodDefault;
 }(ZodType));
 exports.ZodDefault = ZodDefault;
+var ZodNaN = /** @class */ (function (_super) {
+    __extends(ZodNaN, _super);
+    function ZodNaN() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    ZodNaN.prototype._parse = function (input) {
+        var _a = this._processInputParams(input), status = _a.status, ctx = _a.ctx;
+        if (ctx.parsedType !== parseUtil_1.ZodParsedType.nan) {
+            (0, parseUtil_1.addIssueToContext)(ctx, {
+                code: ZodError_1.ZodIssueCode.invalid_type,
+                expected: parseUtil_1.ZodParsedType.nan,
+                received: ctx.parsedType,
+            });
+            return parseUtil_1.INVALID;
+        }
+        return { status: status.value, value: ctx.data };
+    };
+    ZodNaN.create = function (params) {
+        return new ZodNaN(__assign({ typeName: ZodFirstPartyTypeKind.ZodNaN }, processCreateParams(params)));
+    };
+    return ZodNaN;
+}(ZodType));
+exports.ZodNaN = ZodNaN;
 var custom = function (check, params) {
     if (check)
         return ZodAny.create().refine(check, params);
@@ -12065,6 +12141,7 @@ var ZodFirstPartyTypeKind;
 (function (ZodFirstPartyTypeKind) {
     ZodFirstPartyTypeKind["ZodString"] = "ZodString";
     ZodFirstPartyTypeKind["ZodNumber"] = "ZodNumber";
+    ZodFirstPartyTypeKind["ZodNaN"] = "ZodNaN";
     ZodFirstPartyTypeKind["ZodBigInt"] = "ZodBigInt";
     ZodFirstPartyTypeKind["ZodBoolean"] = "ZodBoolean";
     ZodFirstPartyTypeKind["ZodDate"] = "ZodDate";
@@ -12105,6 +12182,8 @@ var stringType = ZodString.create;
 exports.string = stringType;
 var numberType = ZodNumber.create;
 exports.number = numberType;
+var nanType = ZodNaN.create;
+exports.nan = nanType;
 var bigIntType = ZodBigInt.create;
 exports.bigint = bigIntType;
 var booleanType = ZodBoolean.create;
@@ -12170,7 +12249,7 @@ var onumber = function () { return numberType().optional(); };
 exports.onumber = onumber;
 var oboolean = function () { return booleanType().optional(); };
 exports.oboolean = oboolean;
-//# sourceMappingURL=types.js.map
+
 
 /***/ }),
 
