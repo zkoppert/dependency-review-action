@@ -2,50 +2,72 @@ import * as core from '@actions/core'
 import * as dependencyGraph from './dependency-graph'
 import * as github from '@actions/github'
 import * as retryHelpers from './retry-helper'
-import * as z from 'zod'
+import styles from 'ansi-styles'
 
 async function run(): Promise<void> {
-  const context = github.context
-
-  if (!context.payload.pull_request) {
-    core.info('This action only works on pull requests')
-    return
-  }
-
   try {
-    const repo = context.repo
+    if (github.context.payload.pull_request === undefined) {
+      core.info('This action only works on pull requests')
+      return
+    }
 
-    const pull_request = z
-      .object({
-        number: z.number(),
-        base: z.object({ref: z.string(), sha: z.string()}),
-        head: z.object({ref: z.string(), sha: z.string()})
-      })
-      .parse(context.payload.pull_request)
-
-    core.info(`Repository\t\t ${repo.repo}`)
-    core.info(`Repo Owner\t\t ${repo.owner}`)
-    core.info(`Pull Request\t\t ${pull_request.number}`)
-    core.info(`Base Branch\t\t ${pull_request.base.ref}`)
-    core.info(`Head Branch\t\t ${pull_request.head.ref}`)
-    core.info(`Base SHA\t\t ${pull_request.base.sha}`)
-    core.info(`Head SHA\t\t ${pull_request.head.sha}`)
-
-    const diff = await retryHelpers.execute(async () =>
-      dependencyGraph.compare(pull_request.base.ref, pull_request.head.ref)
+    const pull_request = dependencyGraph.PullRequestSchema.parse(
+      github.context.payload.pull_request
     )
 
-    core.info(JSON.stringify(diff, null, 2))
+    const retryHelper = new retryHelpers.RetryHelper(3, 1, 2)
+    const compareResponse = await retryHelper.execute(async () =>
+      dependencyGraph.compare(
+        github.context.repo.owner,
+        github.context.repo.repo,
+        pull_request.base.ref,
+        pull_request.head.ref
+      )
+    )
 
-    const octo = github.getOctokit(core.getInput('repo-token'))
-    const response = await octo.request('GET /users/{username}', {
-      username: 'febuiles'
-    })
+    let failed = false
+    for (const change of compareResponse) {
+      if (
+        change.change_type === 'added' &&
+        change.vulnerabilities !== undefined &&
+        change.vulnerabilities.length > 0
+      ) {
+        for (const vuln of change.vulnerabilities) {
+          core.info(
+            `${vuln.advisory_summary} (${renderSeverity(
+              vuln.severity
+            )}) – https://github.com/advisories/${vuln.advisory_ghsa_id}`
+          )
+          core.info(
+            `${styles.color.grey.open}${change.manifest} » ${change.name}@${change.version}${styles.color.grey.close}`
+          )
+        }
+        failed = true
+      }
+    }
 
-    core.info(JSON.stringify(response, null, 2))
+    if (failed) {
+      core.setFailed(
+        'This pull request introduces vulnerable packages. See details above.'
+      )
+    }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
+}
+
+function renderSeverity(
+  severity: 'critical' | 'high' | 'moderate' | 'low'
+): string {
+  const color = (
+    {
+      critical: 'red',
+      high: 'red',
+      moderate: 'yellow',
+      low: 'grey'
+    } as const
+  )[severity]
+  return `${styles.color[color].open}${severity} severity${styles.color[color].close}`
 }
 
 run()
