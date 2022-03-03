@@ -148,14 +148,14 @@ function run() {
                     change.vulnerabilities !== undefined &&
                     change.vulnerabilities.length > 0) {
                     for (const vuln of change.vulnerabilities) {
-                        core.info(`${vuln.advisory_summary} (${renderSeverity(vuln.severity)})`);
-                        core.info(`  https://github.com/advisories/${vuln.advisory_ghsa_id}`);
+                        core.info(`${vuln.advisory_summary} (${renderSeverity(vuln.severity)}) – https://github.com/advisories/${vuln.advisory_ghsa_id}`);
+                        core.info(`${ansi_styles_1.default.color.grey.open}${change.manifest} » ${change.name}@${change.version}${ansi_styles_1.default.color.grey.close}`);
                     }
                     failed = true;
                 }
             }
             if (failed) {
-                core.setFailed("Yo, I'm sorry but you are introduced some vulnerabilities here.");
+                core.setFailed('This pull request introduces vulnerable packages. See details above.');
             }
         }
         catch (error) {
