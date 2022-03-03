@@ -34,13 +34,9 @@ async function run(): Promise<void> {
       ) {
         for (const vuln of change.vulnerabilities) {
           core.info(
-            `${vuln.advisory_summary} (${renderSeverity(
-              vuln.severity
-            )}) – https://github.com/advisories/${vuln.advisory_ghsa_id}`
+            `${renderSeverity(vuln.severity)}\t${vuln.advisory_summary} (${styles.color.grey.open}${change.manifest} » ${change.name}@${change.version}${styles.color.grey.close})`
           )
-          core.info(
-            `${styles.color.grey.open}${change.manifest} » ${change.name}@${change.version}${styles.color.grey.close}`
-          )
+          core.info(`https://github.com/advisories/${vuln.advisory_ghsa_id}`)
         }
         failed = true
       }
@@ -67,7 +63,7 @@ function renderSeverity(
       low: 'grey'
     } as const
   )[severity]
-  return `${styles.color[color].open}${severity} severity${styles.color[color].close}`
+  return `${styles.color[color].open}${severity}${styles.color[color].close}`
 }
 
 run()

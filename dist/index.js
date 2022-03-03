@@ -148,8 +148,8 @@ function run() {
                     change.vulnerabilities !== undefined &&
                     change.vulnerabilities.length > 0) {
                     for (const vuln of change.vulnerabilities) {
-                        core.info(`${vuln.advisory_summary} (${renderSeverity(vuln.severity)}) – https://github.com/advisories/${vuln.advisory_ghsa_id}`);
-                        core.info(`${ansi_styles_1.default.color.grey.open}${change.manifest} » ${change.name}@${change.version}${ansi_styles_1.default.color.grey.close}`);
+                        core.info(`${renderSeverity(vuln.severity)}\t${vuln.advisory_summary} (${ansi_styles_1.default.color.grey.open}${change.manifest} » ${change.name}@${change.version}${ansi_styles_1.default.color.grey.close})`);
+                        core.info(`https://github.com/advisories/${vuln.advisory_ghsa_id}`);
                     }
                     failed = true;
                 }
@@ -171,7 +171,7 @@ function renderSeverity(severity) {
         moderate: 'yellow',
         low: 'grey'
     }[severity];
-    return `${ansi_styles_1.default.color[color].open}${severity} severity${ansi_styles_1.default.color[color].close}`;
+    return `${ansi_styles_1.default.color[color].open}${severity}${ansi_styles_1.default.color[color].close}`;
 }
 run();
 
