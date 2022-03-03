@@ -41,7 +41,7 @@ async function run(): Promise<void> {
             )}`
           )
           core.info(
-            `  ${styles.modifier.dim.open}↪ https://github.com/advisories/${vuln.advisory_ghsa_id}${styles.modifier.dim.close}`
+            `  ↪ https://github.com/advisories/${vuln.advisory_ghsa_id}`
           )
         }
         failed = true
