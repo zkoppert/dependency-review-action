@@ -1,4 +1,5 @@
 // Shamelessly stolen from https://github.com/actions/checkout/blob/main/src/retry-helper.ts
+// For future ref, could use https://github.com/octokit/plugin-retry.js
 import * as core from '@actions/core'
 
 const defaultMaxAttempts = 3
