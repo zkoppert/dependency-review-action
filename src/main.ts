@@ -17,12 +17,12 @@ async function run(): Promise<void> {
 
     const retryHelper = new retryHelpers.RetryHelper(3, 1, 2)
     const compareResponse = await retryHelper.execute(async () =>
-      dependencyGraph.compare(
-        github.context.repo.owner,
-        github.context.repo.repo,
-        pull_request.base.ref,
-        pull_request.head.ref
-      )
+      dependencyGraph.compare({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        baseRef: pull_request.base.ref,
+        headRef: pull_request.head.ref
+      })
     )
 
     let failed = false

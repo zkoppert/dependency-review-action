@@ -36,24 +36,17 @@ export type CompareResponse = z.infer<typeof CompareResponseSchema>
 
 const octo = github.getOctokit(core.getInput('repo-token'))
 
-export async function compare(
-  owner: string,
-  repo: string,
-  baseRef: string,
+export async function compare({
+  owner,
+  repo,
+  baseRef,
+  headRef
+}: {
+  owner: string
+  repo: string
+  baseRef: string
   headRef: string
-): Promise<CompareResponse> {
-  // TODO: Add backoff
-  // Add an artificial 500ms delay, and fail 50% of the time.
-  /*await new Promise((accept, reject) => {
-    setTimeout(() => {
-      if (Math.random() > 0.2) {
-        accept(null)
-      } else {
-        reject(new Error('oops, something went wrong'))
-      }
-    }, 500)
-  })*/
-
+}): Promise<CompareResponse> {
   const response = await octo.request(
     'GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}',
     {
