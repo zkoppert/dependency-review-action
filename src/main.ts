@@ -1,7 +1,6 @@
 import * as core from '@actions/core'
 import * as dependencyGraph from './dependency-graph'
 import * as github from '@actions/github'
-import * as retryHelpers from './retry-helper'
 import styles from 'ansi-styles'
 import * as z from 'zod'
 
@@ -20,15 +19,12 @@ async function run(): Promise<void> {
       })
       .parse(github.context.payload.pull_request)
 
-    const retryHelper = new retryHelpers.RetryHelper(3, 1, 2)
-    const compareResponse = await retryHelper.execute(async () =>
-      dependencyGraph.compare({
-        owner: github.context.repo.owner,
-        repo: github.context.repo.repo,
-        baseRef: pull_request.base.sha,
-        headRef: pull_request.head.sha
-      })
-    )
+    const compareResponse = await dependencyGraph.compare({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      baseRef: pull_request.base.sha,
+      headRef: pull_request.head.sha
+    })
 
     let failed = false
     for (const change of compareResponse) {

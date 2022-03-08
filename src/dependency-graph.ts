@@ -1,5 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import * as githubUtils from '@actions/github/lib/utils'
+import * as retry from '@octokit/plugin-retry'
 import * as z from 'zod'
 
 export const CompareResponseSchema = z.array(
@@ -10,15 +12,15 @@ export const CompareResponseSchema = z.array(
     name: z.string(),
     version: z.string(),
     package_url: z.string(),
-    license: z.string(),
-    source_repository_url: z.string().nullable(), // temporary .nullable(); this is not in line with the OpenAPI spec but the API returns nil for some reason
+    license: z.string().nullable(),
+    source_repository_url: z.string().nullable(),
     vulnerabilities: z
       .array(
         z.object({
           severity: z.enum(['critical', 'high', 'moderate', 'low']),
           advisory_ghsa_id: z.string(),
           advisory_summary: z.string(),
-          advisory_description: z.string()
+          advisory_url: z.string()
         })
       )
       .optional()
@@ -27,7 +29,11 @@ export const CompareResponseSchema = z.array(
 
 export type CompareResponse = z.infer<typeof CompareResponseSchema>
 
-const octo = github.getOctokit(core.getInput('repo-token'))
+const retryingOctokit = githubUtils.GitHub.plugin(retry.retry)
+
+const octo = new retryingOctokit(
+  githubUtils.getOctokitOptions(core.getInput('repo-token'))
+)
 
 export async function compare({
   owner,
