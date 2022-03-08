@@ -1,5 +1,4 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github'
 import * as githubUtils from '@actions/github/lib/utils'
 import * as retry from '@octokit/plugin-retry'
 import * as z from 'zod'
