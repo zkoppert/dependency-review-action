@@ -1,19 +1,14 @@
 # Dependency Review Action
 
-This actions checks the dependencies you introduce in pull requests
-and warns you about security vulnerabilities:
+This Action scans for vulnerable versions of dependencies introduced by package version changes in Pull Requests, and warns you about the associated security vulnerabilities.
 
 ## Usage
 
 1. Create a new [Personal Access Token
-(PAT)](https://github.com/settings/tokens) with the `repo`
-permissions. Copy this somewhere.
-
-2. Create a new Actions Secret in your repo by visiting:
-https://github.com/<owner>/<repo>/settings/secrets/actions. Name it
-`REPO_TOKEN` and set its value to the previously generated PAT.
-
-3. Add a new YAML workflow to your `.github/workflows` folder:
+(PAT)](https://github.com/settings/tokens) with the `repo` permissions. Copy this for use in step 2
+2. Create a new Actions Secret on your repo at `https://github.com/<OWNER>/<REPO>/settings/secrets/actions`
+3. Name it `REPO_TOKEN` and set its value to the previously generated PAT from step 1
+4. Add a new YAML workflow to your `.github/workflows` folder:
 
 ```yaml
 name: 'Dependency Review'
@@ -25,12 +20,19 @@ jobs:
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v3
-      - name: Dependency Review
+      - name: 'Dependency Review'
         uses: dsp-testing/dependency-review-action@main
         with:
           repo_token: ${{ secrets.REPO_TOKEN }}
 
 ```
+
+## Rough Edges
+The DR workflow will execute when ever a Pull Request on the target repo receives a push. Upon install, the Action will not execute automatically on existing in-flight PRs until they receive a push.
+
+Once installed, any changes to DR-eligible manifest files in a PR that _do not address existing vulnerable dependencies declared there_ will cause this Action to fail CI. This is slated to be addressed during the staff ship, and should not effect your ability to merge such PRs.
+
+If you encounter undue friction and need assistance, contact the DR maintainers using the methods outlined in the staff ship annoucement, or in Slack at `#dependency-graph`.
 
 *Note*: We are using the `@main` release since this is still under
 active development. Once we're ready to ship to production we'll
