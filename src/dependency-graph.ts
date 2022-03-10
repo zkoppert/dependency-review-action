@@ -31,7 +31,7 @@ export type CompareResponse = z.infer<typeof CompareResponseSchema>
 const retryingOctokit = githubUtils.GitHub.plugin(retry.retry)
 
 const octo = new retryingOctokit(
-  githubUtils.getOctokitOptions(core.getInput('repo_token'))
+  githubUtils.getOctokitOptions(core.getInput('repo-token'))
 )
 
 export async function compare({
