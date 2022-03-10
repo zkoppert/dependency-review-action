@@ -3,12 +3,14 @@ import * as dependencyGraph from './dependency-graph'
 import * as github from '@actions/github'
 import styles from 'ansi-styles'
 import * as z from 'zod'
+import {RequestError} from '@octokit/request-error'
 
 async function run(): Promise<void> {
   try {
-    if (github.context.payload.pull_request === undefined) {
-      core.info('This action only works on pull requests')
-      return
+    if (github.context.eventName !== 'pull_request') {
+      throw new Error(
+        `This run was triggered by the "${github.context.eventName}" event, which is unsupported. Please ensure you are using the "pull_request" event for this workflow.`
+      )
     }
 
     const pull_request = z
@@ -41,21 +43,25 @@ async function run(): Promise<void> {
               vuln.severity
             )}`
           )
-          core.info(
-            `  ↪ https://github.com/advisories/${vuln.advisory_ghsa_id}`
-          )
+          core.info(`  ↪ ${vuln.advisory_url}`)
         }
         failed = true
       }
     }
 
     if (failed) {
-      core.setFailed(
-        'This pull request introduces vulnerable packages. See details above.'
-      )
+      throw new Error('This pull request introduces vulnerable packages.')
+    } else {
+      core.info('This pull request does not introduce any vulnerable packages.')
     }
   } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
+    if (error instanceof RequestError && error.status === 404) {
+      core.setFailed(
+        `Dependency review is not supported on this repository. Please ensure that Dependency graph is enabled, see https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/settings/security_analysis.`
+      )
+    } else if (error instanceof Error) {
+      core.setFailed(error.message)
+    }
   }
 }
 

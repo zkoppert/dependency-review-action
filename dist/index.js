@@ -63,7 +63,7 @@ exports.CompareResponseSchema = z.array(z.object({
         .optional()
 }));
 const retryingOctokit = githubUtils.GitHub.plugin(retry.retry);
-const octo = new retryingOctokit(githubUtils.getOctokitOptions(core.getInput('repo_token')));
+const octo = new retryingOctokit(githubUtils.getOctokitOptions(core.getInput('repo-token')));
 function compare({ owner, repo, baseRef, headRef }) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield octo.request('GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}', {
@@ -125,12 +125,12 @@ const dependencyGraph = __importStar(__nccwpck_require__(4966));
 const github = __importStar(__nccwpck_require__(5438));
 const ansi_styles_1 = __importDefault(__nccwpck_require__(6844));
 const z = __importStar(__nccwpck_require__(3301));
+const request_error_1 = __nccwpck_require__(537);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            if (github.context.payload.pull_request === undefined) {
-                core.info('This action only works on pull requests');
-                return;
+            if (github.context.eventName !== 'pull_request') {
+                throw new Error(`This run was triggered by the "${github.context.eventName}" event, which is unsupported. Please ensure you are using the "pull_request" event for this workflow.`);
             }
             const pull_request = z
                 .object({
@@ -152,18 +152,25 @@ function run() {
                     change.vulnerabilities.length > 0) {
                     for (const vuln of change.vulnerabilities) {
                         core.info(`${ansi_styles_1.default.bold.open}${change.manifest} » ${change.name}@${change.version}${ansi_styles_1.default.bold.close} – ${vuln.advisory_summary} ${renderSeverity(vuln.severity)}`);
-                        core.info(`  ↪ https://github.com/advisories/${vuln.advisory_ghsa_id}`);
+                        core.info(`  ↪ ${vuln.advisory_url}`);
                     }
                     failed = true;
                 }
             }
             if (failed) {
-                core.setFailed('This pull request introduces vulnerable packages. See details above.');
+                throw new Error('This pull request introduces vulnerable packages.');
+            }
+            else {
+                core.info('This pull request does not introduce any vulnerable packages.');
             }
         }
         catch (error) {
-            if (error instanceof Error)
+            if (error instanceof request_error_1.RequestError && error.status === 404) {
+                core.setFailed(`Dependency review is not supported on this repository. Please ensure that Dependency graph is enabled, see https://github.com/${github.context.repo.owner}/${github.context.repo.repo}/settings/security_analysis.`);
+            }
+            else if (error instanceof Error) {
                 core.setFailed(error.message);
+            }
         }
     });
 }
