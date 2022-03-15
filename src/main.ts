@@ -50,9 +50,9 @@ async function run(): Promise<void> {
     }
 
     if (failed) {
-      throw new Error('This pull request introduces vulnerable packages.')
+      throw new Error('Dependency review detected vulnerable packages.')
     } else {
-      core.info('This pull request does not introduce any vulnerable packages.')
+      core.info('Dependency review did not detect any vulnerable packages.')
     }
   } catch (error) {
     if (error instanceof RequestError && error.status === 404) {
