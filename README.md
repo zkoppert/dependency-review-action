@@ -1,6 +1,13 @@
 # Dependency Review Action
 
-This Action scans for vulnerable versions of dependencies introduced by package version changes in Pull Requests, and warns you about the associated security vulnerabilities.
+This Action scans for vulnerable versions of dependencies introduced
+by package version changes in Pull Requests, and warns you about the
+associated security vulnerabilities.
+
+The Action makes an authenticated query to the Dependency Graph Diff
+API endpoint (`GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}`)
+to find out the set of added and removed vulnerabilities for each dependency.
+
 
 ## Usage
 
@@ -9,7 +16,7 @@ This Action scans for vulnerable versions of dependencies introduced by package 
 2. Create a new Actions Secret on your repo at `https://github.com/<OWNER>/<REPO>/settings/secrets/actions`
 3. Name it `REPO_TOKEN` and set its value to the previously generated PAT from step 1
 4. Add a new YAML workflow to your `.github/workflows` folder:
-
+p
 ```yaml
 name: 'Dependency Review'
 on: [pull_request]
@@ -28,11 +35,21 @@ jobs:
 
 ## Rough Edges
 
-The DR workflow will execute when ever a Pull Request on the target repo receives a push. Upon install, the Action will not execute automatically on existing in-flight PRs until they receive a push.
+The DR workflow will execute when ever a Pull Request on the target
+repo receives a push. Upon install, the Action will not execute
+automatically on existing in-flight PRs until they receive a push.
 
-Once installed, any changes to DR-eligible manifest files in a PR that _do not address existing vulnerable dependencies declared there_ will cause this Action to fail CI. This is slated to be addressed during the staff ship, and should not effect your ability to merge such PRs.
 
-If you encounter undue friction and need assistance, contact the DR maintainers using the methods outlined in the staff ship annoucement, or in Slack at `#dependency-graph`.
+Once installed, any changes to DR-eligible manifest files in a PR that
+_do not address existing vulnerable dependencies declared there_ will
+cause this Action to fail CI. This is slated to be addressed during
+the staff ship, and should not effect your ability to merge such PRs.
+
+
+If you encounter undue friction and need assistance, contact the DR
+maintainers using the methods outlined in the staff ship annoucement,
+or in Slack at `#dependency-graph`.
+
 
 _Note_: We are using the `@main` release since this is still under
 active development. Once we're ready to ship to production we'll
