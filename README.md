@@ -16,7 +16,7 @@ to find out the set of added and removed vulnerabilities for each dependency.
 2. Create a new Actions Secret on your repo at `https://github.com/<OWNER>/<REPO>/settings/secrets/actions`
 3. Name it `REPO_TOKEN` and set its value to the previously generated PAT from step 1
 4. Add a new YAML workflow to your `.github/workflows` folder:
-p
+
 ```yaml
 name: 'Dependency Review'
 on: [pull_request]
