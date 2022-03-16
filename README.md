@@ -4,9 +4,9 @@ This Action scans for vulnerable versions of dependencies introduced
 by package version changes in Pull Requests, and warns you about the
 associated security vulnerabilities.
 
-The action makes an authenticated query to the Dependency Graph Diff
-API (`GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}`)
-to find out the set of added/removed vulnerabilities.
+The Action makes an authenticated query to the Dependency Graph Diff
+API endpoint (`GET /repos/{owner}/{repo}/dependency-graph/compare/{basehead}`)
+to find out the set of added and removed vulnerabilities for each dependency.
 
 
 ## Usage
@@ -16,7 +16,7 @@ to find out the set of added/removed vulnerabilities.
 2. Create a new Actions Secret on your repo at `https://github.com/<OWNER>/<REPO>/settings/secrets/actions`
 3. Name it `REPO_TOKEN` and set its value to the previously generated PAT from step 1
 4. Add a new YAML workflow to your `.github/workflows` folder:
-
+p
 ```yaml
 name: 'Dependency Review'
 on: [pull_request]
